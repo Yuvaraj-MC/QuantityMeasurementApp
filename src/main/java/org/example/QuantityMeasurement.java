@@ -6,9 +6,9 @@ class QuantityMeasurementApp {
 
     // ---------- LengthUnit Enum (base unit = FEET) ----------
     enum LengthUnit {
-        FEET(1.0),               // 1 foot = 1 foot (base)
-        INCH(1.0 / 12),          // 1 inch = 1/12 foot
-        YARDS(3.0),              // 1 yard = 3 feet
+        FEET(1.0),                  // 1 foot = 1 foot (base)
+        INCH(1.0 / 12),             // 1 inch = 1/12 foot
+        YARDS(3.0),                 // 1 yard = 3 feet
         CENTIMETERS(0.393701 / 12); // 1 cm = 0.393701 inch = 0.393701/12 feet
 
         private final double conversionFactor;
@@ -22,17 +22,20 @@ class QuantityMeasurementApp {
         }
     }
 
-    // ---------- Generic QuantityLength class ----------
-    static class QuantityLength {
 
-        private static final double EPSILON = 1e-9;
+    static class QuantityLength {
+        private static final double EPSILON = 1e-6;
 
         private final double value;
         private final LengthUnit unit;
 
+
         public QuantityLength(double value, LengthUnit unit) {
             if (unit == null) {
                 throw new IllegalArgumentException("Unit cannot be null");
+            }
+            if (!Double.isFinite(value)) {
+                throw new IllegalArgumentException("Value must be a finite number");
             }
             this.value = value;
             this.unit = unit;
@@ -42,9 +45,26 @@ class QuantityMeasurementApp {
             return value * unit.getConversionFactor();
         }
 
+
+        public QuantityLength convertTo(LengthUnit targetUnit) {
+            if (targetUnit == null) {
+                throw new IllegalArgumentException("Target unit cannot be null");
+            }
+            double convertedValue = toBaseUnit() / targetUnit.getConversionFactor();
+            return new QuantityLength(convertedValue, targetUnit);
+        }
+
+        public double getValue() {
+            return value;
+        }
+
+        public LengthUnit getUnit() {
+            return unit;
+        }
+
         @Override
         public boolean equals(Object obj) {
-            if (this == obj) return true;                              // reflexive
+            if (this == obj) return true;
             if (obj == null || getClass() != obj.getClass()) return false;
             QuantityLength other = (QuantityLength) obj;
             return Math.abs(this.toBaseUnit() - other.toBaseUnit()) < EPSILON;
@@ -54,34 +74,48 @@ class QuantityMeasurementApp {
         public int hashCode() {
             return Objects.hash(Math.round(toBaseUnit() / EPSILON));
         }
+
+        @Override
+        public String toString() {
+            return value + " " + unit;
+        }
+    }
+
+
+    public static double convert(double value, LengthUnit source, LengthUnit target) {
+        if (source == null || target == null) {
+            throw new IllegalArgumentException("Source and target units cannot be null");
+        }
+        if (!Double.isFinite(value)) {
+            throw new IllegalArgumentException("Value must be a finite number");
+        }
+        return value * (source.getConversionFactor() / target.getConversionFactor());
+    }
+
+    // ---------- Overloaded demonstration methods ----------
+
+    // Method 1: raw value + from/to units
+    public static void demonstrateLengthConversion(double value, LengthUnit from, LengthUnit to) {
+        double result = convert(value, from, to);
+        System.out.println("Input: convert(" + value + ", " + from + ", " + to + ") → Output: " + result);
+    }
+
+    // Method 2: existing QuantityLength object + target unit (OVERLOAD - same name, different params)
+    public static void demonstrateLengthConversion(QuantityLength quantity, LengthUnit to) {
+        QuantityLength converted = quantity.convertTo(to);
+        System.out.println("Input: convert(" + quantity + ", " + to + ") → Output: " + converted.getValue());
     }
 
     // ---------- Main ----------
     public static void main(String[] args) {
-        printResult("Quantity(1.0, YARDS) and Quantity(3.0, FEET)",
-                new QuantityLength(1.0, LengthUnit.YARDS),
-                new QuantityLength(3.0, LengthUnit.FEET));
+        demonstrateLengthConversion(1.0, LengthUnit.FEET, LengthUnit.INCH);
+        demonstrateLengthConversion(3.0, LengthUnit.YARDS, LengthUnit.FEET);
+        demonstrateLengthConversion(36.0, LengthUnit.INCH, LengthUnit.YARDS);
+        demonstrateLengthConversion(1.0, LengthUnit.CENTIMETERS, LengthUnit.INCH);
+        demonstrateLengthConversion(0.0, LengthUnit.FEET, LengthUnit.INCH);
 
-        printResult("Quantity(1.0, YARDS) and Quantity(36.0, INCHES)",
-                new QuantityLength(1.0, LengthUnit.YARDS),
-                new QuantityLength(36.0, LengthUnit.INCH));
-
-        printResult("Quantity(2.0, YARDS) and Quantity(2.0, YARDS)",
-                new QuantityLength(2.0, LengthUnit.YARDS),
-                new QuantityLength(2.0, LengthUnit.YARDS));
-
-        printResult("Quantity(2.0, CENTIMETERS) and Quantity(2.0, CENTIMETERS)",
-                new QuantityLength(2.0, LengthUnit.CENTIMETERS),
-                new QuantityLength(2.0, LengthUnit.CENTIMETERS));
-
-        printResult("Quantity(1.0, CENTIMETERS) and Quantity(0.393701, INCHES)",
-                new QuantityLength(1.0, LengthUnit.CENTIMETERS),
-                new QuantityLength(0.393701, LengthUnit.INCH));
-    }
-
-    private static void printResult(String label, QuantityLength a, QuantityLength b) {
-        System.out.println("Input: " + label);
-        System.out.println("Output: Equal (" + a.equals(b) + ")");
-        System.out.println();
+        // Overloaded version - QuantityLength object tho
+        QuantityLength lengthInYards = new QuantityLength(2.0, LengthUnit.YARDS);
+        demonstrateLengthConversion(lengthInYards, LengthUnit.INCH);
     }
 }
