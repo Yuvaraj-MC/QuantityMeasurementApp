@@ -2,11 +2,11 @@ package org.example;
 
 import java.util.Objects;
 
- class QuantityMeasurementApp {
+class QuantityMeasurementApp {
 
-    // Inner class - oka feet measurement ni represent chestundi
+    // ---------- Feet class (UC1) ----------
     static class Feet {
-        private final double value;   // final => immutable
+        private final double value;
 
         public Feet(double value) {
             this.value = value;
@@ -14,16 +14,9 @@ import java.util.Objects;
 
         @Override
         public boolean equals(Object obj) {
-            // 1. Same reference aithe true (reflexive)
             if (this == obj) return true;
-
-            // 2. null aithe kani, different type aithe kani false
             if (obj == null || getClass() != obj.getClass()) return false;
-
-            // 3. Safe ga cast cheyyi
             Feet other = (Feet) obj;
-
-            // 4. double values ni Double.compare tho compare cheyyi (== vaddu)
             return Double.compare(value, other.value) == 0;
         }
 
@@ -33,11 +26,47 @@ import java.util.Objects;
         }
     }
 
+    // ---------- Inches class (UC2) ----------
+    static class Inches {
+        private final double value;
+
+        public Inches(double value) {
+            this.value = value;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null || getClass() != obj.getClass()) return false;
+            Inches other = (Inches) obj;
+            return Double.compare(value, other.value) == 0;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(value);
+        }
+    }
+
+    // ---------- Static methods (main dependency reduce) ----------
+    public static boolean checkFeetEquality(double v1, double v2) {
+        Feet f1 = new Feet(v1);
+        Feet f2 = new Feet(v2);
+        return f1.equals(f2);
+    }
+
+    public static boolean checkInchesEquality(double v1, double v2) {
+        Inches i1 = new Inches(v1);
+        Inches i2 = new Inches(v2);
+        return i1.equals(i2);
+    }
+
+    // ---------- Main ----------
     public static void main(String[] args) {
-        Feet f1 = new Feet(1.0);
-        Feet f2 = new Feet(1.0);
+        System.out.println("Input: 1.0 inch and 1.0 inch");
+        System.out.println("Output: Equal (" + checkInchesEquality(1.0, 1.0) + ")");
 
         System.out.println("Input: 1.0 ft and 1.0 ft");
-        System.out.println("Output: Equal (" + f1.equals(f2) + ")");
+        System.out.println("Output: Equal (" + checkFeetEquality(1.0, 1.0) + ")");
     }
 }
