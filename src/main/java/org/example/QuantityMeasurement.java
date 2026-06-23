@@ -4,10 +4,12 @@ import java.util.Objects;
 
 class QuantityMeasurementApp {
 
-    // ---------- Step 1: LengthUnit Enum ----------
+    // ---------- LengthUnit Enum (base unit = FEET) ----------
     enum LengthUnit {
-        FEET(1.0),       // 1 foot = 1 foot (base)
-        INCH(1.0 / 12);  // 1 inch = 1/12 foot
+        FEET(1.0),               // 1 foot = 1 foot (base)
+        INCH(1.0 / 12),          // 1 inch = 1/12 foot
+        YARDS(3.0),              // 1 yard = 3 feet
+        CENTIMETERS(0.393701 / 12); // 1 cm = 0.393701 inch = 0.393701/12 feet
 
         private final double conversionFactor;
 
@@ -20,8 +22,11 @@ class QuantityMeasurementApp {
         }
     }
 
-    // ---------- Step 2: Generic QuantityLength class ----------
+    // ---------- Generic QuantityLength class ----------
     static class QuantityLength {
+
+        private static final double EPSILON = 1e-9;
+
         private final double value;
         private final LengthUnit unit;
 
@@ -33,7 +38,6 @@ class QuantityMeasurementApp {
             this.unit = unit;
         }
 
-        // value ni base unit (feet) loki convert chestundi
         private double toBaseUnit() {
             return value * unit.getConversionFactor();
         }
@@ -41,28 +45,43 @@ class QuantityMeasurementApp {
         @Override
         public boolean equals(Object obj) {
             if (this == obj) return true;                              // reflexive
-            if (obj == null || getClass() != obj.getClass()) return false; // null + type safety
+            if (obj == null || getClass() != obj.getClass()) return false;
             QuantityLength other = (QuantityLength) obj;
-            // Rendu values ni base unit loki convert chesi compare cheyyi
-            return Double.compare(this.toBaseUnit(), other.toBaseUnit()) == 0;
+            return Math.abs(this.toBaseUnit() - other.toBaseUnit()) < EPSILON;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(toBaseUnit());
+            return Objects.hash(Math.round(toBaseUnit() / EPSILON));
         }
     }
 
     // ---------- Main ----------
     public static void main(String[] args) {
-        QuantityLength oneFeet = new QuantityLength(1.0, LengthUnit.FEET);
-        QuantityLength twelveInches = new QuantityLength(12.0, LengthUnit.INCH);
-        System.out.println("Input: Quantity(1.0, \"feet\") and Quantity(12.0, \"inches\")");
-        System.out.println("Output: Equal (" + oneFeet.equals(twelveInches) + ")");
+        printResult("Quantity(1.0, YARDS) and Quantity(3.0, FEET)",
+                new QuantityLength(1.0, LengthUnit.YARDS),
+                new QuantityLength(3.0, LengthUnit.FEET));
 
-        QuantityLength oneInch1 = new QuantityLength(1.0, LengthUnit.INCH);
-        QuantityLength oneInch2 = new QuantityLength(1.0, LengthUnit.INCH);
-        System.out.println("Input: Quantity(1.0, \"inch\") and Quantity(1.0, \"inch\")");
-        System.out.println("Output: Equal (" + oneInch1.equals(oneInch2) + ")");
+        printResult("Quantity(1.0, YARDS) and Quantity(36.0, INCHES)",
+                new QuantityLength(1.0, LengthUnit.YARDS),
+                new QuantityLength(36.0, LengthUnit.INCH));
+
+        printResult("Quantity(2.0, YARDS) and Quantity(2.0, YARDS)",
+                new QuantityLength(2.0, LengthUnit.YARDS),
+                new QuantityLength(2.0, LengthUnit.YARDS));
+
+        printResult("Quantity(2.0, CENTIMETERS) and Quantity(2.0, CENTIMETERS)",
+                new QuantityLength(2.0, LengthUnit.CENTIMETERS),
+                new QuantityLength(2.0, LengthUnit.CENTIMETERS));
+
+        printResult("Quantity(1.0, CENTIMETERS) and Quantity(0.393701, INCHES)",
+                new QuantityLength(1.0, LengthUnit.CENTIMETERS),
+                new QuantityLength(0.393701, LengthUnit.INCH));
+    }
+
+    private static void printResult(String label, QuantityLength a, QuantityLength b) {
+        System.out.println("Input: " + label);
+        System.out.println("Output: Equal (" + a.equals(b) + ")");
+        System.out.println();
     }
 }
