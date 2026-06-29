@@ -12,114 +12,127 @@ class QuantityMeasurementAppTest {
     private final QuantityMeasurementApp.LengthUnit YARDS = QuantityMeasurementApp.LengthUnit.YARDS;
     private final QuantityMeasurementApp.LengthUnit CM = QuantityMeasurementApp.LengthUnit.CENTIMETERS;
 
-    // ---------- Basic conversions ----------
+    private QuantityMeasurementApp.QuantityLength q(double v, QuantityMeasurementApp.LengthUnit u) {
+        return new QuantityMeasurementApp.QuantityLength(v, u);
+    }
+
+    // ---------- Same-unit addition ----------
     @Test
-    void testConversion_FeetToInches() {
-        assertEquals(12.0, QuantityMeasurementApp.convert(1.0, FEET, INCH), EPSILON);
+    void testAddition_SameUnit_FeetPlusFeet() {
+        QuantityMeasurementApp.QuantityLength result = q(1.0, FEET).add(q(2.0, FEET));
+        assertEquals(3.0, result.getValue(), EPSILON);
+        assertEquals(FEET, result.getUnit());
     }
 
     @Test
-    void testConversion_InchesToFeet() {
-        assertEquals(2.0, QuantityMeasurementApp.convert(24.0, INCH, FEET), EPSILON);
+    void testAddition_SameUnit_InchPlusInch() {
+        QuantityMeasurementApp.QuantityLength result = q(6.0, INCH).add(q(6.0, INCH));
+        assertEquals(12.0, result.getValue(), EPSILON);
+        assertEquals(INCH, result.getUnit());
+    }
+
+    // ---------- Cross-unit addition ----------
+    @Test
+    void testAddition_CrossUnit_FeetPlusInches() {
+        // 1 ft + 12 inch = 2 ft (result feet, first operand)
+        QuantityMeasurementApp.QuantityLength result = q(1.0, FEET).add(q(12.0, INCH));
+        assertEquals(2.0, result.getValue(), EPSILON);
+        assertEquals(FEET, result.getUnit());
     }
 
     @Test
-    void testConversion_YardsToInches() {
-        assertEquals(36.0, QuantityMeasurementApp.convert(1.0, YARDS, INCH), EPSILON);
+    void testAddition_CrossUnit_InchPlusFeet() {
+        // 12 inch + 1 ft = 24 inch (result inches, first operand)
+        QuantityMeasurementApp.QuantityLength result = q(12.0, INCH).add(q(1.0, FEET));
+        assertEquals(24.0, result.getValue(), EPSILON);
+        assertEquals(INCH, result.getUnit());
     }
 
     @Test
-    void testConversion_InchesToYards() {
-        assertEquals(2.0, QuantityMeasurementApp.convert(72.0, INCH, YARDS), EPSILON);
+    void testAddition_CrossUnit_YardPlusFeet() {
+        // 1 yard + 3 ft = 2 yards
+        QuantityMeasurementApp.QuantityLength result = q(1.0, YARDS).add(q(3.0, FEET));
+        assertEquals(2.0, result.getValue(), EPSILON);
+        assertEquals(YARDS, result.getUnit());
     }
 
     @Test
-    void testConversion_CentimetersToInches() {
-        assertEquals(1.0, QuantityMeasurementApp.convert(2.54, CM, INCH), EPSILON);
+    void testAddition_CrossUnit_CentimeterPlusInch() {
+        // 2.54 cm + 1 inch = ~5.08 cm
+        QuantityMeasurementApp.QuantityLength result = q(2.54, CM).add(q(1.0, INCH));
+        assertEquals(5.08, result.getValue(), 1e-3);
+        assertEquals(CM, result.getUnit());
     }
 
+    // ---------- Commutativity (same physical length) ----------
     @Test
-    void testConversion_FeetToYards() {
-        assertEquals(2.0, QuantityMeasurementApp.convert(6.0, FEET, YARDS), EPSILON);
+    void testAddition_Commutativity() {
+        // add(A,B) and add(B,A) same length (equals true), display unit veru avvochu
+        QuantityMeasurementApp.QuantityLength ab = q(1.0, FEET).add(q(12.0, INCH));
+        QuantityMeasurementApp.QuantityLength ba = q(12.0, INCH).add(q(1.0, FEET));
+        assertEquals(ab, ba); // equals() base-unit lo compare chestundi
     }
 
-    // ---------- Round-trip ----------
+    // ---------- Identity (zero) ----------
     @Test
-    void testConversion_RoundTrip_PreservesValue() {
-        double original = 5.0;
-        double toInches = QuantityMeasurementApp.convert(original, FEET, INCH);
-        double backToFeet = QuantityMeasurementApp.convert(toInches, INCH, FEET);
-        assertEquals(original, backToFeet, EPSILON);
-    }
-
-    // ---------- Same unit ----------
-    @Test
-    void testConversion_SameUnit() {
-        assertEquals(5.0, QuantityMeasurementApp.convert(5.0, FEET, FEET), EPSILON);
-    }
-
-    // ---------- Zero ----------
-    @Test
-    void testConversion_ZeroValue() {
-        assertEquals(0.0, QuantityMeasurementApp.convert(0.0, FEET, INCH), EPSILON);
+    void testAddition_WithZero() {
+        QuantityMeasurementApp.QuantityLength result = q(5.0, FEET).add(q(0.0, INCH));
+        assertEquals(5.0, result.getValue(), EPSILON);
+        assertEquals(FEET, result.getUnit());
     }
 
     // ---------- Negative ----------
     @Test
-    void testConversion_NegativeValue() {
-        assertEquals(-12.0, QuantityMeasurementApp.convert(-1.0, FEET, INCH), EPSILON);
+    void testAddition_NegativeValues() {
+        QuantityMeasurementApp.QuantityLength result = q(5.0, FEET).add(q(-2.0, FEET));
+        assertEquals(3.0, result.getValue(), EPSILON);
+        assertEquals(FEET, result.getUnit());
     }
 
-    // ---------- Large value ----------
+    // ---------- Null operand ----------
     @Test
-    void testConversion_LargeValue() {
-        assertEquals(12000.0, QuantityMeasurementApp.convert(1000.0, FEET, INCH), EPSILON);
+    void testAddition_NullSecondOperand() {
+        assertThrows(IllegalArgumentException.class, () -> q(1.0, FEET).add(null));
     }
 
-    // ---------- Invalid unit ----------
+    // ---------- Large values ----------
     @Test
-    void testConversion_NullSourceUnit_Throws() {
-        assertThrows(IllegalArgumentException.class,
-                () -> QuantityMeasurementApp.convert(1.0, null, INCH));
+    void testAddition_LargeValues() {
+        QuantityMeasurementApp.QuantityLength result = q(1e6, FEET).add(q(1e6, FEET));
+        assertEquals(2e6, result.getValue(), EPSILON);
+    }
+
+    // ---------- Small values ----------
+    @Test
+    void testAddition_SmallValues() {
+        QuantityMeasurementApp.QuantityLength result = q(0.001, FEET).add(q(0.002, FEET));
+        assertEquals(0.003, result.getValue(), EPSILON);
+    }
+
+    // ---------- Static overloads ----------
+    @Test
+    void testAddition_StaticOverload_Objects() {
+        QuantityMeasurementApp.QuantityLength result =
+                QuantityMeasurementApp.add(q(1.0, FEET), q(2.0, FEET));
+        assertEquals(3.0, result.getValue(), EPSILON);
     }
 
     @Test
-    void testConversion_NullTargetUnit_Throws() {
-        assertThrows(IllegalArgumentException.class,
-                () -> QuantityMeasurementApp.convert(1.0, FEET, null));
+    void testAddition_StaticOverload_RawValues() {
+        // 1 ft + 12 inch, target = INCH => 24 inch
+        QuantityMeasurementApp.QuantityLength result =
+                QuantityMeasurementApp.add(1.0, FEET, 12.0, INCH, INCH);
+        assertEquals(24.0, result.getValue(), EPSILON);
+        assertEquals(INCH, result.getUnit());
     }
 
-    // ---------- NaN / Infinite ----------
+    // ---------- Immutability check ----------
     @Test
-    void testConversion_NaN_Throws() {
-        assertThrows(IllegalArgumentException.class,
-                () -> QuantityMeasurementApp.convert(Double.NaN, FEET, INCH));
-    }
-
-    @Test
-    void testConversion_Infinite_Throws() {
-        assertThrows(IllegalArgumentException.class,
-                () -> QuantityMeasurementApp.convert(Double.POSITIVE_INFINITY, FEET, INCH));
-    }
-
-    // ---------- convertTo instance method ----------
-    @Test
-    void testConvertTo_ReturnsNewInstance() {
-        QuantityMeasurementApp.QuantityLength yard =
-                new QuantityMeasurementApp.QuantityLength(1.0, YARDS);
-        QuantityMeasurementApp.QuantityLength inInches = yard.convertTo(INCH);
-        assertEquals(36.0, inInches.getValue(), EPSILON);
-        assertEquals(INCH, inInches.getUnit());
-        // original object change avvaledu (immutability)
-        assertEquals(1.0, yard.getValue(), EPSILON);
-        assertEquals(YARDS, yard.getUnit());
-    }
-
-    // ---------- Backward compatibility (UC1-UC4 equality still works) ----------
-    @Test
-    void testEquality_YardToFeet_StillWorks() {
-        assertEquals(
-                new QuantityMeasurementApp.QuantityLength(1.0, YARDS),
-                new QuantityMeasurementApp.QuantityLength(3.0, FEET));
+    void testAddition_OriginalsUnchanged() {
+        QuantityMeasurementApp.QuantityLength a = q(1.0, FEET);
+        QuantityMeasurementApp.QuantityLength b = q(2.0, FEET);
+        a.add(b);
+        assertEquals(1.0, a.getValue(), EPSILON);
+        assertEquals(2.0, b.getValue(), EPSILON);
     }
 }

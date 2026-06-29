@@ -22,13 +22,15 @@ class QuantityMeasurementApp {
         }
     }
 
-
+    /**
+     * Immutable length measurement with a value and unit.
+     * Supports equality (cross-unit), conversion, and addition.
+     */
     static class QuantityLength {
         private static final double EPSILON = 1e-6;
 
         private final double value;
         private final LengthUnit unit;
-
 
         public QuantityLength(double value, LengthUnit unit) {
             if (unit == null) {
@@ -45,13 +47,22 @@ class QuantityMeasurementApp {
             return value * unit.getConversionFactor();
         }
 
-
         public QuantityLength convertTo(LengthUnit targetUnit) {
             if (targetUnit == null) {
                 throw new IllegalArgumentException("Target unit cannot be null");
             }
             double convertedValue = toBaseUnit() / targetUnit.getConversionFactor();
             return new QuantityLength(convertedValue, targetUnit);
+        }
+
+
+        public QuantityLength add(QuantityLength other) {
+            if (other == null) {
+                throw new IllegalArgumentException("Cannot add a null quantity");
+            }
+            double sumInBase = this.toBaseUnit() + other.toBaseUnit();
+            double resultValue = sumInBase / this.unit.getConversionFactor();
+            return new QuantityLength(resultValue, this.unit);
         }
 
         public double getValue() {
@@ -77,11 +88,11 @@ class QuantityMeasurementApp {
 
         @Override
         public String toString() {
-            return value + " " + unit;
+            return "Quantity(" + value + ", " + unit + ")";
         }
     }
 
-
+    // ---------- Static convert API (UC5) ----------
     public static double convert(double value, LengthUnit source, LengthUnit target) {
         if (source == null || target == null) {
             throw new IllegalArgumentException("Source and target units cannot be null");
@@ -92,30 +103,53 @@ class QuantityMeasurementApp {
         return value * (source.getConversionFactor() / target.getConversionFactor());
     }
 
-    // ---------- Overloaded demonstration methods ----------
 
-    // Method 1: raw value + from/to units
-    public static void demonstrateLengthConversion(double value, LengthUnit from, LengthUnit to) {
-        double result = convert(value, from, to);
-        System.out.println("Input: convert(" + value + ", " + from + ", " + to + ") → Output: " + result);
+    public static QuantityLength add(QuantityLength a, QuantityLength b) {
+        if (a == null || b == null) {
+            throw new IllegalArgumentException("Operands cannot be null");
+        }
+        return a.add(b);
     }
 
-    // Method 2: existing QuantityLength object + target unit (OVERLOAD - same name, different params)
-    public static void demonstrateLengthConversion(QuantityLength quantity, LengthUnit to) {
-        QuantityLength converted = quantity.convertTo(to);
-        System.out.println("Input: convert(" + quantity + ", " + to + ") → Output: " + converted.getValue());
+    // Overload 2: raw values + units, result targetUnit lo
+    public static QuantityLength add(double v1, LengthUnit u1, double v2, LengthUnit u2, LengthUnit targetUnit) {
+        QuantityLength q1 = new QuantityLength(v1, u1);
+        QuantityLength q2 = new QuantityLength(v2, u2);
+        return q1.add(q2).convertTo(targetUnit);
+    }
+
+    // ---------- Demonstration ----------
+    private static void demonstrateAddition(QuantityLength a, QuantityLength b) {
+        QuantityLength result = add(a, b);
+        System.out.println("Input: add(" + a + ", " + b + ")");
+        System.out.println("Output: " + result);
+        System.out.println();
     }
 
     // ---------- Main ----------
     public static void main(String[] args) {
-        demonstrateLengthConversion(1.0, LengthUnit.FEET, LengthUnit.INCH);
-        demonstrateLengthConversion(3.0, LengthUnit.YARDS, LengthUnit.FEET);
-        demonstrateLengthConversion(36.0, LengthUnit.INCH, LengthUnit.YARDS);
-        demonstrateLengthConversion(1.0, LengthUnit.CENTIMETERS, LengthUnit.INCH);
-        demonstrateLengthConversion(0.0, LengthUnit.FEET, LengthUnit.INCH);
+        demonstrateAddition(new QuantityLength(1.0, LengthUnit.FEET),
+                new QuantityLength(2.0, LengthUnit.FEET));
 
-        // Overloaded version - QuantityLength object tho
-        QuantityLength lengthInYards = new QuantityLength(2.0, LengthUnit.YARDS);
-        demonstrateLengthConversion(lengthInYards, LengthUnit.INCH);
+        demonstrateAddition(new QuantityLength(1.0, LengthUnit.FEET),
+                new QuantityLength(12.0, LengthUnit.INCH));
+
+        demonstrateAddition(new QuantityLength(12.0, LengthUnit.INCH),
+                new QuantityLength(1.0, LengthUnit.FEET));
+
+        demonstrateAddition(new QuantityLength(1.0, LengthUnit.YARDS),
+                new QuantityLength(3.0, LengthUnit.FEET));
+
+        demonstrateAddition(new QuantityLength(36.0, LengthUnit.INCH),
+                new QuantityLength(1.0, LengthUnit.YARDS));
+
+        demonstrateAddition(new QuantityLength(2.54, LengthUnit.CENTIMETERS),
+                new QuantityLength(1.0, LengthUnit.INCH));
+
+        demonstrateAddition(new QuantityLength(5.0, LengthUnit.FEET),
+                new QuantityLength(0.0, LengthUnit.INCH));
+
+        demonstrateAddition(new QuantityLength(5.0, LengthUnit.FEET),
+                new QuantityLength(-2.0, LengthUnit.FEET));
     }
 }
