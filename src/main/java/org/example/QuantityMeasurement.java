@@ -14,71 +14,43 @@ class QuantityMeasurementApp {
         System.out.println();
     }
 
-    public static <U extends IMeasurable> void demonstrateAddition(Quantity<U> a, Quantity<U> b, U target) {
-        System.out.println("Input: " + a + ".add(" + b + ", " + target.getUnitName() + ")");
-        System.out.println("Output: " + a.add(b, target));
-        System.out.println();
-    }
-
-    public static <U extends IMeasurable> void demonstrateSubtraction(Quantity<U> a, Quantity<U> b) {
-        System.out.println("Input: " + a + ".subtract(" + b + ")");
-        System.out.println("Output: " + a.subtract(b));
-        System.out.println();
-    }
-
-    public static <U extends IMeasurable> void demonstrateSubtraction(Quantity<U> a, Quantity<U> b, U target) {
-        System.out.println("Input: " + a + ".subtract(" + b + ", " + target.getUnitName() + ")");
-        System.out.println("Output: " + a.subtract(b, target));
-        System.out.println();
-    }
-
-    public static <U extends IMeasurable> void demonstrateDivision(Quantity<U> a, Quantity<U> b) {
-        System.out.println("Input: " + a + ".divide(" + b + ")");
-        System.out.println("Output: " + a.divide(b));
-        System.out.println();
-    }
-
     public static void main(String[] args) {
-        System.out.println("=== SUBTRACTION (Implicit Target) ===");
-        demonstrateSubtraction(new Quantity<>(10.0, LengthUnit.FEET),
-                new Quantity<>(6.0, LengthUnit.INCH));
-        demonstrateSubtraction(new Quantity<>(10.0, WeightUnit.KILOGRAM),
-                new Quantity<>(5000.0, WeightUnit.GRAM));
-        demonstrateSubtraction(new Quantity<>(5.0, VolumeUnit.LITRE),
-                new Quantity<>(500.0, VolumeUnit.MILLILITRE));
+        System.out.println("=== TEMPERATURE EQUALITY ===");
+        demonstrateEquality(new Quantity<>(0.0, TemperatureUnit.CELSIUS),
+                new Quantity<>(32.0, TemperatureUnit.FAHRENHEIT));
+        demonstrateEquality(new Quantity<>(100.0, TemperatureUnit.CELSIUS),
+                new Quantity<>(212.0, TemperatureUnit.FAHRENHEIT));
+        demonstrateEquality(new Quantity<>(273.15, TemperatureUnit.KELVIN),
+                new Quantity<>(0.0, TemperatureUnit.CELSIUS));
+        demonstrateEquality(new Quantity<>(-40.0, TemperatureUnit.CELSIUS),
+                new Quantity<>(-40.0, TemperatureUnit.FAHRENHEIT));
 
-        System.out.println("=== SUBTRACTION (Explicit Target) ===");
-        demonstrateSubtraction(new Quantity<>(10.0, LengthUnit.FEET),
-                new Quantity<>(6.0, LengthUnit.INCH), LengthUnit.INCH);
-        demonstrateSubtraction(new Quantity<>(5.0, VolumeUnit.LITRE),
-                new Quantity<>(2.0, VolumeUnit.LITRE), VolumeUnit.MILLILITRE);
+        System.out.println("=== TEMPERATURE CONVERSION ===");
+        demonstrateConversion(new Quantity<>(100.0, TemperatureUnit.CELSIUS), TemperatureUnit.FAHRENHEIT);
+        demonstrateConversion(new Quantity<>(32.0, TemperatureUnit.FAHRENHEIT), TemperatureUnit.CELSIUS);
+        demonstrateConversion(new Quantity<>(0.0, TemperatureUnit.CELSIUS), TemperatureUnit.KELVIN);
 
-        System.out.println("=== SUBTRACTION (Negative / Zero) ===");
-        demonstrateSubtraction(new Quantity<>(5.0, LengthUnit.FEET),
-                new Quantity<>(10.0, LengthUnit.FEET));
-        demonstrateSubtraction(new Quantity<>(10.0, LengthUnit.FEET),
-                new Quantity<>(120.0, LengthUnit.INCH));
-
-        System.out.println("=== DIVISION ===");
-        demonstrateDivision(new Quantity<>(10.0, LengthUnit.FEET),
-                new Quantity<>(2.0, LengthUnit.FEET));
-        demonstrateDivision(new Quantity<>(24.0, LengthUnit.INCH),
-                new Quantity<>(2.0, LengthUnit.FEET));
-        demonstrateDivision(new Quantity<>(10.0, WeightUnit.KILOGRAM),
-                new Quantity<>(5.0, WeightUnit.KILOGRAM));
-        demonstrateDivision(new Quantity<>(5.0, VolumeUnit.LITRE),
-                new Quantity<>(10.0, VolumeUnit.LITRE));
-
-        System.out.println("=== ERROR CASES ===");
+        System.out.println("=== UNSUPPORTED OPERATIONS ===");
         try {
-            new Quantity<>(10.0, LengthUnit.FEET).divide(new Quantity<>(0.0, LengthUnit.FEET));
-        } catch (ArithmeticException e) {
-            System.out.println("Divide by zero -> " + e.getMessage());
+            new Quantity<>(100.0, TemperatureUnit.CELSIUS)
+                    .add(new Quantity<>(50.0, TemperatureUnit.CELSIUS));
+        } catch (UnsupportedOperationException e) {
+            System.out.println("ADD -> " + e.getMessage());
         }
         try {
-            new Quantity<>(10.0, LengthUnit.FEET).subtract(null);
-        } catch (IllegalArgumentException e) {
-            System.out.println("Null operand -> " + e.getMessage());
+            new Quantity<>(100.0, TemperatureUnit.CELSIUS)
+                    .divide(new Quantity<>(50.0, TemperatureUnit.CELSIUS));
+        } catch (UnsupportedOperationException e) {
+            System.out.println("DIVIDE -> " + e.getMessage());
         }
+
+        System.out.println("\n=== CROSS-CATEGORY PREVENTION ===");
+        System.out.println("100 CELSIUS == 100 FEET : " +
+                new Quantity<>(100.0, TemperatureUnit.CELSIUS)
+                        .equals(new Quantity<>(100.0, LengthUnit.FEET)));
+
+        System.out.println("\n=== OTHER CATEGORIES STILL DO ARITHMETIC ===");
+        System.out.println("1 ft + 12 inch = " +
+                new Quantity<>(1.0, LengthUnit.FEET).add(new Quantity<>(12.0, LengthUnit.INCH)));
     }
 }

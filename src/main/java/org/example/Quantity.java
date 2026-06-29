@@ -69,6 +69,8 @@ public class Quantity<U extends IMeasurable> {
     }
 
     private double performBaseArithmetic(Quantity<U> other, ArithmeticOperation operation) {
+        // UC14: temperature laanti units operation reject chestayi
+        this.unit.validateOperationSupport(operation.name());
         return operation.compute(this.toBaseUnit(), other.toBaseUnit());
     }
 
@@ -103,7 +105,7 @@ public class Quantity<U extends IMeasurable> {
         if (targetUnit == null) {
             throw new IllegalArgumentException("Target unit cannot be null");
         }
-        double converted = targetUnit.convertFromBaseUnit(toBaseUnit());
+        double converted = roundToTwoDecimals(targetUnit.convertFromBaseUnit(toBaseUnit()));
         return new Quantity<>(converted, targetUnit);
     }
 
