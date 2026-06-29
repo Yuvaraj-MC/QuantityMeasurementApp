@@ -1,31 +1,33 @@
 package org.example;
 
-/**
- * Standalone weight unit enum. Base unit = KILOGRAM.
- * Conversion responsibility EE enum ke (UC8 pattern - SRP).
- */
-public enum WeightUnit {
-    KILOGRAM(1.0),       // base unit
-    GRAM(0.001),         // 1 g = 0.001 kg
-    POUND(0.453592);     // 1 lb = 0.453592 kg
+public enum WeightUnit implements IMeasurable {
+    KILOGRAM(1.0),
+    GRAM(0.001),
+    POUND(0.453592);
 
-    private final double conversionFactor; // 1 unit = conversionFactor kg
+    private final double conversionFactor;
 
     WeightUnit(double conversionFactor) {
         this.conversionFactor = conversionFactor;
     }
 
+    @Override
     public double getConversionFactor() {
         return conversionFactor;
     }
 
-    /** Ee unit value ni base unit (kg) loki convert chestundi. */
+    @Override
     public double convertToBaseUnit(double value) {
         return value * conversionFactor;
     }
 
-    /** Base unit (kg) value ni ee unit loki convert chestundi. */
+    @Override
     public double convertFromBaseUnit(double baseValue) {
         return baseValue / conversionFactor;
+    }
+
+    @Override
+    public String getUnitName() {
+        return name();
     }
 }
