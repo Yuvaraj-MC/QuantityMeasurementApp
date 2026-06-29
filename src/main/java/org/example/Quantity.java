@@ -31,16 +31,22 @@ public class Quantity<U extends IMeasurable> {
         return new Quantity<>(converted, targetUnit);
     }
 
-    private Quantity<U> addInternal(Quantity<U> other, U targetUnit) {
+    private void validateSameCategory(Quantity<U> other) {
         if (other == null) {
-            throw new IllegalArgumentException("Cannot add a null quantity");
+            throw new IllegalArgumentException("Other quantity cannot be null");
         }
+        if (this.unit.getClass() != other.unit.getClass()) {
+            throw new IllegalArgumentException("Cannot operate across different measurement categories");
+        }
+    }
+
+    private Quantity<U> addInternal(Quantity<U> other, U targetUnit) {
+        validateSameCategory(other);
         if (targetUnit == null) {
             throw new IllegalArgumentException("Target unit cannot be null");
         }
         double sumInBase = this.toBaseUnit() + other.toBaseUnit();
-        double resultValue = targetUnit.convertFromBaseUnit(sumInBase);
-        return new Quantity<>(resultValue, targetUnit);
+        return new Quantity<>(targetUnit.convertFromBaseUnit(sumInBase), targetUnit);
     }
 
     public Quantity<U> add(Quantity<U> other) {
@@ -49,6 +55,32 @@ public class Quantity<U extends IMeasurable> {
 
     public Quantity<U> add(Quantity<U> other, U targetUnit) {
         return addInternal(other, targetUnit);
+    }
+
+    private Quantity<U> subtractInternal(Quantity<U> other, U targetUnit) {
+        validateSameCategory(other);
+        if (targetUnit == null) {
+            throw new IllegalArgumentException("Target unit cannot be null");
+        }
+        double diffInBase = this.toBaseUnit() - other.toBaseUnit();
+        return new Quantity<>(targetUnit.convertFromBaseUnit(diffInBase), targetUnit);
+    }
+
+    public Quantity<U> subtract(Quantity<U> other) {
+        return subtractInternal(other, this.unit);
+    }
+
+    public Quantity<U> subtract(Quantity<U> other, U targetUnit) {
+        return subtractInternal(other, targetUnit);
+    }
+
+    public double divide(Quantity<U> other) {
+        validateSameCategory(other);
+        double divisorBase = other.toBaseUnit();
+        if (Math.abs(divisorBase) < EPSILON) {
+            throw new ArithmeticException("Cannot divide by zero quantity");
+        }
+        return this.toBaseUnit() / divisorBase;
     }
 
     public double getValue() {
