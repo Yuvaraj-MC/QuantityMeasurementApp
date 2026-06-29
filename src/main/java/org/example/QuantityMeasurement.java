@@ -24,7 +24,7 @@ class QuantityMeasurementApp {
 
     /**
      * Immutable length measurement with a value and unit.
-     * Supports equality (cross-unit), conversion, and addition.
+     * Supports equality, conversion, and addition (with/without target unit).
      */
     static class QuantityLength {
         private static final double EPSILON = 1e-6;
@@ -56,13 +56,30 @@ class QuantityMeasurementApp {
         }
 
 
-        public QuantityLength add(QuantityLength other) {
+        private QuantityLength addInternal(QuantityLength other, LengthUnit targetUnit) {
             if (other == null) {
                 throw new IllegalArgumentException("Cannot add a null quantity");
             }
+            if (targetUnit == null) {
+                throw new IllegalArgumentException("Target unit cannot be null");
+            }
             double sumInBase = this.toBaseUnit() + other.toBaseUnit();
-            double resultValue = sumInBase / this.unit.getConversionFactor();
-            return new QuantityLength(resultValue, this.unit);
+            double resultValue = sumInBase / targetUnit.getConversionFactor();
+            return new QuantityLength(resultValue, targetUnit);
+        }
+
+        /**
+         * UC6: result first operand (this) unit lo.
+         */
+        public QuantityLength add(QuantityLength other) {
+            return addInternal(other, this.unit);
+        }
+
+        /**
+         * UC7: result EXPLICIT ga ichina targetUnit lo (OVERLOAD).
+         */
+        public QuantityLength add(QuantityLength other, LengthUnit targetUnit) {
+            return addInternal(other, targetUnit);
         }
 
         public double getValue() {
@@ -103,7 +120,9 @@ class QuantityMeasurementApp {
         return value * (source.getConversionFactor() / target.getConversionFactor());
     }
 
+    // ---------- Static add API ----------
 
+    // UC6: result first operand unit lo
     public static QuantityLength add(QuantityLength a, QuantityLength b) {
         if (a == null || b == null) {
             throw new IllegalArgumentException("Operands cannot be null");
@@ -111,17 +130,18 @@ class QuantityMeasurementApp {
         return a.add(b);
     }
 
-    // Overload 2: raw values + units, result targetUnit lo
-    public static QuantityLength add(double v1, LengthUnit u1, double v2, LengthUnit u2, LengthUnit targetUnit) {
-        QuantityLength q1 = new QuantityLength(v1, u1);
-        QuantityLength q2 = new QuantityLength(v2, u2);
-        return q1.add(q2).convertTo(targetUnit);
+    // UC7: result explicit target unit lo (OVERLOAD)
+    public static QuantityLength add(QuantityLength a, QuantityLength b, LengthUnit targetUnit) {
+        if (a == null || b == null) {
+            throw new IllegalArgumentException("Operands cannot be null");
+        }
+        return a.add(b, targetUnit);
     }
 
     // ---------- Demonstration ----------
-    private static void demonstrateAddition(QuantityLength a, QuantityLength b) {
-        QuantityLength result = add(a, b);
-        System.out.println("Input: add(" + a + ", " + b + ")");
+    private static void demonstrateAddition(QuantityLength a, QuantityLength b, LengthUnit target) {
+        QuantityLength result = add(a, b, target);
+        System.out.println("Input: add(" + a + ", " + b + ", " + target + ")");
         System.out.println("Output: " + result);
         System.out.println();
     }
@@ -129,27 +149,27 @@ class QuantityMeasurementApp {
     // ---------- Main ----------
     public static void main(String[] args) {
         demonstrateAddition(new QuantityLength(1.0, LengthUnit.FEET),
-                new QuantityLength(2.0, LengthUnit.FEET));
+                new QuantityLength(12.0, LengthUnit.INCH), LengthUnit.FEET);
 
         demonstrateAddition(new QuantityLength(1.0, LengthUnit.FEET),
-                new QuantityLength(12.0, LengthUnit.INCH));
+                new QuantityLength(12.0, LengthUnit.INCH), LengthUnit.INCH);
 
-        demonstrateAddition(new QuantityLength(12.0, LengthUnit.INCH),
-                new QuantityLength(1.0, LengthUnit.FEET));
+        demonstrateAddition(new QuantityLength(1.0, LengthUnit.FEET),
+                new QuantityLength(12.0, LengthUnit.INCH), LengthUnit.YARDS);
 
         demonstrateAddition(new QuantityLength(1.0, LengthUnit.YARDS),
-                new QuantityLength(3.0, LengthUnit.FEET));
+                new QuantityLength(3.0, LengthUnit.FEET), LengthUnit.YARDS);
 
         demonstrateAddition(new QuantityLength(36.0, LengthUnit.INCH),
-                new QuantityLength(1.0, LengthUnit.YARDS));
+                new QuantityLength(1.0, LengthUnit.YARDS), LengthUnit.FEET);
 
         demonstrateAddition(new QuantityLength(2.54, LengthUnit.CENTIMETERS),
-                new QuantityLength(1.0, LengthUnit.INCH));
+                new QuantityLength(1.0, LengthUnit.INCH), LengthUnit.CENTIMETERS);
 
         demonstrateAddition(new QuantityLength(5.0, LengthUnit.FEET),
-                new QuantityLength(0.0, LengthUnit.INCH));
+                new QuantityLength(0.0, LengthUnit.INCH), LengthUnit.YARDS);
 
         demonstrateAddition(new QuantityLength(5.0, LengthUnit.FEET),
-                new QuantityLength(-2.0, LengthUnit.FEET));
+                new QuantityLength(-2.0, LengthUnit.FEET), LengthUnit.INCH);
     }
 }
