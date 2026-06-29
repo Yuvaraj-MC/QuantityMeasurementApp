@@ -35,10 +35,18 @@ class QuantityMeasurementApp {
         demonstrateAddition(new Quantity<>(1.0, WeightUnit.KILOGRAM),
                 new Quantity<>(1000.0, WeightUnit.GRAM), WeightUnit.KILOGRAM);
 
+        System.out.println("=== VOLUME (UC11) ===");
+        demonstrateEquality(new Quantity<>(1.0, VolumeUnit.LITRE),
+                new Quantity<>(1000.0, VolumeUnit.MILLILITRE));
+        demonstrateConversion(new Quantity<>(2.0, VolumeUnit.GALLON), VolumeUnit.LITRE);
+        demonstrateAddition(new Quantity<>(1.0, VolumeUnit.LITRE),
+                new Quantity<>(1000.0, VolumeUnit.MILLILITRE), VolumeUnit.MILLILITRE);
+
         System.out.println("=== CROSS-CATEGORY PREVENTION ===");
+        Quantity<VolumeUnit> oneLitre = new Quantity<>(1.0, VolumeUnit.LITRE);
         Quantity<LengthUnit> oneFoot = new Quantity<>(1.0, LengthUnit.FEET);
         Quantity<WeightUnit> oneKg = new Quantity<>(1.0, WeightUnit.KILOGRAM);
-        System.out.println("Input: Quantity(1.0, FEET).equals(Quantity(1.0, KILOGRAM))");
-        System.out.println("Output: " + oneFoot.equals(oneKg));
+        System.out.println("1 LITRE == 1 FEET : " + oneLitre.equals(oneFoot));
+        System.out.println("1 LITRE == 1 KILOGRAM : " + oneLitre.equals(oneKg));
     }
 }
