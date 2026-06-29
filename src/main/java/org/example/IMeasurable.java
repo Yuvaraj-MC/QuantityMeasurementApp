@@ -6,11 +6,14 @@ public interface IMeasurable {
     double convertFromBaseUnit(double baseValue);
     String getUnitName();
 
-
     default boolean supportsArithmetic() {
         return true;
     }
 
     default void validateOperationSupport(String operation) {
+    }
+
+    default String getMeasurementType() {
+        return this.getClass().getSimpleName();
     }
 }
